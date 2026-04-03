@@ -28,7 +28,7 @@ interface Props {
 }
 
 export default function BehaviorDesigner({ onDone }: Props) {
-  const { addHabit } = useAppStore()
+  const { addHabit, habits } = useAppStore()
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -64,6 +64,7 @@ export default function BehaviorDesigner({ onDone }: Props) {
         napoleon: levelNapoleon.trim() || levelMarch.trim() || levelHibernate.trim(),
       },
       currentStreak: 0,
+      sortOrder: habits.length,
       createdAt: now,
       updatedAt: now,
     })

@@ -65,11 +65,12 @@ export const presetTemplates: PresetTemplate[] = [
   },
 ]
 
-export function createHabitFromPreset(preset: PresetTemplate): Omit<HabitBehavior, 'id'> {
+export function createHabitFromPreset(preset: PresetTemplate, sortOrder: number): Omit<HabitBehavior, 'id'> {
   const now = Date.now()
   return {
     ...preset,
     currentStreak: 0,
+    sortOrder,
     createdAt: now,
     updatedAt: now,
   }

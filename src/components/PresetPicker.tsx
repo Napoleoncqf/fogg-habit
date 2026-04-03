@@ -7,10 +7,10 @@ interface Props {
 }
 
 export default function PresetPicker({ onDone }: Props) {
-  const { addHabit } = useAppStore()
+  const { addHabit, habits } = useAppStore()
 
   const handlePick = async (index: number) => {
-    const habit = createHabitFromPreset(presetTemplates[index])
+    const habit = createHabitFromPreset(presetTemplates[index], habits.length)
     await addHabit(habit)
     onDone()
   }

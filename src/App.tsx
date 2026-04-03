@@ -1,9 +1,11 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
-import HomePage from './pages/HomePage'
-import DesignerPage from './pages/DesignerPage'
-import MapPage from './pages/MapPage'
-import StatsPage from './pages/StatsPage'
-import SettingsPage from './pages/SettingsPage'
+
+const HomePage = lazy(() => import('./pages/HomePage'))
+const DesignerPage = lazy(() => import('./pages/DesignerPage'))
+const MapPage = lazy(() => import('./pages/MapPage'))
+const StatsPage = lazy(() => import('./pages/StatsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 
 const navItems = [
   { to: '/', label: '营地', icon: '⚔️' },
@@ -13,18 +15,24 @@ const navItems = [
   { to: '/settings', label: '设置', icon: '⚙️' },
 ]
 
+function Loading() {
+  return <div className="p-4 text-center text-[var(--text-secondary)] text-sm">加载中...</div>
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col min-h-svh">
         <main className="flex-1 pb-16">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/designer" element={<DesignerPage />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/stats" element={<StatsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/designer" element={<DesignerPage />} />
+              <Route path="/map" element={<MapPage />} />
+              <Route path="/stats" element={<StatsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </Suspense>
         </main>
 
         <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-[var(--bg-secondary)] border-t border-[var(--border)] flex justify-around py-2 z-50">

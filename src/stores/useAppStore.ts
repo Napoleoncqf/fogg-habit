@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { db } from './db'
-import { getTodayStr } from '../utils/date'
+import { getTodayStr, getYesterdayStr } from '../utils/date'
 import type { EnergyLevel, DailyLog, HabitBehavior, CompletedBehavior } from '../types'
 
 interface AppState {
@@ -12,9 +12,16 @@ interface AppState {
   init: () => Promise<void>
   setTodayEnergy: (level: EnergyLevel) => Promise<void>
   addHabit: (habit: Omit<HabitBehavior, 'id'>) => Promise<void>
+  updateHabit: (id: number, updates: Partial<HabitBehavior>) => Promise<void>
   deleteHabit: (id: number) => Promise<void>
+  reorderHabits: (orderedIds: number[]) => Promise<void>
   completeBehavior: (behaviorId: number, difficulty: EnergyLevel) => Promise<void>
   isBehaviorCompletedToday: (behaviorId: number) => boolean
+}
+
+async function refreshHabits(): Promise<HabitBehavior[]> {
+  const habits = await db.habits.orderBy('sortOrder').toArray()
+  return habits
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -26,8 +33,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   init: async () => {
     if (get().initialized) return
     const today = getTodayStr()
-    const habits = await db.habits.toArray()
+    const habits = await refreshHabits()
     const log = await db.dailyLogs.where('date').equals(today).first()
+
+    // Check streak resets on init (if yesterday had no completion, reset streak)
+    const yesterday = getYesterdayStr()
+    for (const h of habits) {
+      if (h.currentStreak > 0 && h.lastCompletedDate && h.lastCompletedDate < yesterday) {
+        await db.habits.update(h.id!, { currentStreak: 0 })
+        h.currentStreak = 0
+      }
+    }
+
     set({
       habits,
       todayLog: log ?? null,
@@ -54,19 +71,32 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addHabit: async (habit) => {
-    const id = await db.habits.add(habit as HabitBehavior)
-    const habits = await db.habits.toArray()
-    set({ habits })
+    await db.habits.add(habit as HabitBehavior)
+    set({ habits: await refreshHabits() })
+  },
+
+  updateHabit: async (id, updates) => {
+    await db.habits.update(id, { ...updates, updatedAt: Date.now() })
+    set({ habits: await refreshHabits() })
   },
 
   deleteHabit: async (id) => {
     await db.habits.delete(id)
-    const habits = await db.habits.toArray()
-    set({ habits })
+    set({ habits: await refreshHabits() })
+  },
+
+  reorderHabits: async (orderedIds) => {
+    await db.transaction('rw', db.habits, async () => {
+      for (let i = 0; i < orderedIds.length; i++) {
+        await db.habits.update(orderedIds[i], { sortOrder: i })
+      }
+    })
+    set({ habits: await refreshHabits() })
   },
 
   completeBehavior: async (behaviorId, difficulty) => {
     const today = getTodayStr()
+    const yesterday = getYesterdayStr()
     let log = await db.dailyLogs.where('date').equals(today).first()
     const entry: CompletedBehavior = {
       behaviorId,
@@ -89,17 +119,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       log = { id, date: today, energyLevel: get().todayEnergy ?? 'march', completedBehaviors: [entry] }
     }
 
-    // Update streak
+    // Correct streak: +1 if last completed was yesterday or today, else reset to 1
     const habit = await db.habits.get(behaviorId)
     if (habit) {
+      const wasConsecutive = habit.lastCompletedDate === yesterday || habit.lastCompletedDate === today
+      const newStreak = wasConsecutive ? habit.currentStreak + 1 : 1
       await db.habits.update(behaviorId, {
-        currentStreak: habit.currentStreak + 1,
+        currentStreak: newStreak,
+        lastCompletedDate: today,
         updatedAt: Date.now(),
       })
     }
 
-    const habits = await db.habits.toArray()
-    set({ todayLog: log, habits })
+    set({ todayLog: log, habits: await refreshHabits() })
   },
 
   isBehaviorCompletedToday: (behaviorId) => {

@@ -11,6 +11,15 @@ class FoggHabitDB extends Dexie {
       habits: '++id, category, createdAt',
       dailyLogs: '++id, date',
     })
+    this.version(2).stores({
+      habits: '++id, category, createdAt, sortOrder',
+      dailyLogs: '++id, date',
+    }).upgrade((tx) => {
+      return tx.table('habits').toCollection().modify((habit) => {
+        if (habit.sortOrder === undefined) habit.sortOrder = habit.id ?? 0
+        if (habit.lastCompletedDate === undefined) habit.lastCompletedDate = undefined
+      })
+    })
   }
 }
 

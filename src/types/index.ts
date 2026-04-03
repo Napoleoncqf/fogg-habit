@@ -18,6 +18,8 @@ export interface HabitBehavior {
   category: HabitCategory
   difficultyLevels: DifficultyLevels
   currentStreak: number
+  lastCompletedDate?: string // YYYY-MM-DD, for streak calculation
+  sortOrder: number
   reminderTime?: string
   createdAt: number
   updatedAt: number
