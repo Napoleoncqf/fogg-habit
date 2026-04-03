@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
 import { useAppStore } from '../stores/useAppStore'
 import BehaviorDesigner from '../components/BehaviorDesigner'
