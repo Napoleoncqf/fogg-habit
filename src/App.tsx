@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
+import { HashRouter, Routes, Route, NavLink } from 'react-router-dom'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const DesignerPage = lazy(() => import('./pages/DesignerPage'))
@@ -21,7 +21,7 @@ function Loading() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="flex flex-col min-h-svh">
         <main className="flex-1 pb-16">
           <Suspense fallback={<Loading />}>
@@ -55,6 +55,6 @@ export default function App() {
           ))}
         </nav>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   )
 }

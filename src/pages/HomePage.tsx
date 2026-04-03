@@ -4,6 +4,7 @@ import { useAppStore } from '../stores/useAppStore'
 import EnergyDashboard from '../components/EnergyDashboard'
 import TaskCard from '../components/TaskCard'
 import AdaptiveSuggestions from '../components/AdaptiveSuggestions'
+import DailyQuote from '../components/DailyQuote'
 import { scheduleNotifications } from '../utils/notifications'
 
 export default function HomePage() {
@@ -37,6 +38,7 @@ export default function HomePage() {
         </p>
       </div>
 
+      <DailyQuote />
       <EnergyDashboard />
 
       <div className="px-4 pb-4 space-y-3">
